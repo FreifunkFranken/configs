@@ -28,6 +28,9 @@ do
 #        echo "BW available -- up $1: $Tavail_kbitPS kBit/s; down $1: $Ravail_kbitPS kBit/s"
 
         # Pass calculated figures to B.A.T.M.A.N Gateway Selection
-#        echo "batctl gw_mode server ${Ravail_kbitPS}kbit/${Tavail_kbitPS}kbit"
-        batctl gw_mode server "${Ravail_kbitPS}kbit/${Tavail_kbitPS}kbit" 
+        for bat in /sys/class/net/bat*; do
+                iface=${bat##*/}
+                batctl -m $iface gw_mode server "${Ravail_kbitPS}kbit/${Tavail_kbitPS}kbit" 
+        done
+
 done
