@@ -1,0 +1,18 @@
+# /usr/local/lib/systemd/system
+
+[Unit]
+Description=Unbound recursive Domain Name Server
+After=network.service openvpn.service olsrd.service
+Wants=nss-lookup.target
+Before=nss-lookup.target
+
+[Service]
+Type=forking
+ExecStartPre=/usr/sbin/unbound-checkconf
+ExecStart=/usr/sbin/unbound
+#PIDFile=/var/run/unbound.pid
+
+Restart=always
+RestartSec=60
+TimeoutSec=30
+
