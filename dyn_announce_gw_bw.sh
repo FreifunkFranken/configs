@@ -1,6 +1,6 @@
 #!/bin/bash
+gwsel_lockfile="/tmp/gwsel_lockfile"  # lockfile to allow for low bandwidth settings 
 
- 
 if [ -z "$1" ]; then
         echo
         echo "usage: $0 <network-interface> <update_interval [sec]> <total BW up [Mbit/sec]> <total BW down [Mbit/sec]>"
@@ -12,6 +12,7 @@ fi
 
 while true
 do
+    if [ ! -e ${gwsel_lockfile} ]; then    # lockfile not present
         # Bandwidth currently used (time averaged)
         R1=$(cat "/sys/class/net/$1/statistics/rx_bytes")
         T1=$(cat "/sys/class/net/$1/statistics/tx_bytes")
@@ -26,11 +27,14 @@ do
         Tavail_kbitPS=$(echo "scale=0; if (($3 * 1024 - $TkbitPS) >0) ($3 * 1024 - $TkbitPS) else 0" | bc -l)
         Ravail_kbitPS=$(echo "scale=0; if (($4 * 1024 - $RkbitPS) >0) ($4 * 1024 - $RkbitPS) else 0" | bc -l)
 #        echo "BW available -- up $1: $Tavail_kbitPS kBit/s; down $1: $Ravail_kbitPS kBit/s"
+    else                                     # lockfile present
+        Tavail_kbitPS=0
+        Ravail_kbitPS=0
+        sleep "$2"
+    fi
 
-        # Pass calculated figures to B.A.T.M.A.N Gateway Selection
-        for bat in /sys/class/net/bat*; do
-                iface=${bat##*/}
-                batctl -m $iface gw_mode server "${Ravail_kbitPS}kbit/${Tavail_kbitPS}kbit" 
-        done
-
+    for bat in /sys/class/net/bat*; do
+              iface=${bat##*/}
+              batctl -m $iface gw_mode server "${Ravail_kbitPS}kbit/${Tavail_kbitPS}kbit" 
+    done
 done
