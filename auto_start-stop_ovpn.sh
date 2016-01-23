@@ -15,10 +15,10 @@ openvpn_stop-cmd () {                   # command used disabling tunnel
     #killall openvpn                     # hardcore
 }
 
-openvpn_start-cmd () {                   # command used enabling tunnel
-    #service openvpn start                # ubuntu
-    /etc/init.d/openvpn start            # debian
-    #openvpn /etc/openvpn/*.conf &        # hardcore
+openvpn_start-cmd () {                  # command used enabling tunnel
+    #service openvpn start               # ubuntu
+    /etc/init.d/openvpn start           # debian
+    #openvpn /etc/openvpn/*.conf &       # hardcore
 }
 
 ping1 () {
