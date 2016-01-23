@@ -1,22 +1,24 @@
 #!/bin/bash
-IF="tun0"                            # Interface used for ping
-ping1_target="8.8.8.8"               # IP no. 1 used for ping
-ping2_target="82.165.229.31"         # IP no. 2 used for ping
-ping_interval="5"                    # waiting time in-between two pings
-switchback_interval="3600"           # waiting time for interface to recover before probing again
-start_grace="10"                     # waiting time to allow for tunnel restart
-logfile="/dev/null"                  # logfile for debug
 
-openvpn_stop-cmd () {                # command used disabling tunnel
-    #service openvpn stop             # ubuntu
-    /etc/init.d/openvpn stop         # debian
-    #killall openvpn                  # hardcore
+IF="tun0"                               # Interface used for ping
+ping1_target="8.8.8.8"                  # IP no. 1 used for ping
+ping2_target="82.165.229.31"            # IP no. 2 used for ping
+ping_interval="5"                       # waiting time in-between two pings
+switchback_interval="3600"              # waiting time for interface to recover before probing again
+start_grace="10"                        # waiting time to allow for tunnel restart
+logfile="/dev/null"                     # logfile for debug
+gwsel_lockfile="/tmp/gwsel_lockfile"    # lockfile to allow for low bandwidth settings 
+
+openvpn_stop-cmd () {                   # command used disabling tunnel
+    service openvpn stop                # ubuntu
+    #/etc/init.d/openvpn stop            # debian
+    #killall openvpn                     # hardcore
 }
 
-openvpn_start-cmd () {                # command used enabling tunnel
-    #service openvpn start             # ubuntu
-    /etc/init.d/openvpn start         # debian
-    #openvpn /etc/openvpn/*.conf &     # hardcore
+openvpn_start-cmd () {                   # command used enabling tunnel
+    service openvpn start                # ubuntu
+    #/etc/init.d/openvpn start            # debian
+    #openvpn /etc/openvpn/*.conf &        # hardcore
 }
 
 ping1 () {
@@ -52,6 +54,7 @@ do
     else
         logger -t "$0" ${ping1_target} and ${ping2_target} not reached via interface $IF.
         echo "$(date): ${ping1_target} and ${ping2_target} not reached via interface $IF." &>> $logfile
+        touch ${gwsel_lockfile} &>> $logfile
 
         if [ -h "/sys/class/net/$IF" ]; then
             logger -t "$0" Stopping interface $IF.
@@ -60,6 +63,7 @@ do
         fi
 
         sleep ${switchback_interval}
+        rm -f ${gwsel_lockfile} &>> $logfile
 
         if [ ! -h "/sys/class/net/$IF" ]; then
             logger -t "$0" Restoring interface $IF to probe for recovery.
