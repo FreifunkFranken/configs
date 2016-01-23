@@ -54,21 +54,21 @@ do
     else
         logger -t "$0" ${ping1_target} and ${ping2_target} not reached via interface $IF.
         echo "$(date): ${ping1_target} and ${ping2_target} not reached via interface $IF." &>> $logfile
-        touch ${gwsel_lockfile} &>> $logfile
 
         if [ -h "/sys/class/net/$IF" ]; then
             logger -t "$0" Stopping interface $IF.
             echo "$(date): Stopping interface $IF." &>> $logfile
             openvpn_stop-cmd &>> $logfile
+            touch ${gwsel_lockfile} &>> $logfile
         fi
 
         sleep ${switchback_interval}
-        rm -f ${gwsel_lockfile} &>> $logfile
 
         if [ ! -h "/sys/class/net/$IF" ]; then
             logger -t "$0" Restoring interface $IF to probe for recovery.
             echo "$(date): Restoring interface $IF to probe for recovery." &>> $logfile
             openvpn_start-cmd &>> $logfile
+            rm -f ${gwsel_lockfile} &>> $logfile
         fi
     fi
 done
